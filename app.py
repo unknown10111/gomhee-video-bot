@@ -185,7 +185,7 @@ if query:
         results = search_videos(query, top_k)
         end_time = time.time()
         
-    st.success(f"검색 완료! ({end_time - start_time:.2f}초)")
+
     
     for i, result in enumerate(results, 1):
         st.markdown(f"""
