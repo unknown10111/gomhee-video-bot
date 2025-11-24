@@ -1,6 +1,10 @@
 """
 박곰희TV 영상 추천 시스템 Streamlit UI
 """
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 import streamlit as st
 import chromadb
 from embedding_service import get_embedding_model
