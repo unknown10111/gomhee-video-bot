@@ -1,9 +1,13 @@
 """
 박곰희TV 영상 추천 시스템 Streamlit UI
 """
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# Streamlit Cloud용 SQLite 패치 (로컬에서는 무시됨)
+try:
+    __import__('pysqlite3')
+    import sys
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass
 
 import streamlit as st
 import chromadb
@@ -21,25 +25,35 @@ st.set_page_config(
 # 스타일 설정
 st.markdown("""
 <style>
+    /* Google Fonts - Pretendard */
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+    
+    * {
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+    
     .stTextInput > div > div > input {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
+        font-weight: 400;
     }
     .video-card {
         background-color: white;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
         overflow: hidden;
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     .video-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     }
     .video-thumbnail-container {
         position: relative;
         width: 100%;
         padding-top: 56.25%; /* 16:9 Aspect Ratio */
         overflow: hidden;
+        background: #f5f5f5;
     }
     .video-thumbnail {
         position: absolute;
@@ -50,48 +64,63 @@ st.markdown("""
         object-fit: cover;
     }
     .video-content {
-        padding: 20px;
+        padding: 18px;
         display: flex;
         flex-direction: column;
     }
     .video-title {
-        font-size: 1.3rem;
-        font-weight: 700;
+        font-size: 1.15rem;
+        font-weight: 600;
+        line-height: 1.5;
+        color: #1a1a1a;
         margin-bottom: 10px;
-        color: #1f1f1f;
-        line-height: 1.4;
+        /* 2줄 제한 */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .timestamp-badge {
-        background-color: #ff0000;
+        background: linear-gradient(135deg, #FF6B6B, #FF8E53);
         color: white;
-        padding: 4px 10px;
+        padding: 5px 12px;
         border-radius: 20px;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
         align-self: flex-end;
         margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
     }
 
     .watch-button, .watch-button:visited {
         display: block;
         width: 100%;
-        background: linear-gradient(45deg, #FF512F, #DD2476);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white !important;
         text-align: center;
-        padding: 12px;
-        border-radius: 10px;
-        font-weight: bold;
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
         text-decoration: none;
-        margin-top: 15px;
-        box-shadow: 0 4px 15px rgba(221, 36, 118, 0.3);
+        margin-top: 12px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         transition: transform 0.2s, box-shadow 0.2s;
         border: none;
     }
     .watch-button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(221, 36, 118, 0.4);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         color: white !important;
         text-decoration: none;
+    }
+    
+    /* 페이지 타이틀 개선 */
+    h1 {
+        font-weight: 700 !important;
+        font-size: 1.8rem !important;
+        color: #1a1a1a !important;
     }
     
     /* 모바일 최적화 */
@@ -102,10 +131,17 @@ st.markdown("""
             padding-right: 1rem !important;
         }
         .video-title {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
         .video-content {
-            padding: 15px;
+            padding: 14px;
+        }
+        h1 {
+            font-size: 1.5rem !important;
+        }
+        .watch-button {
+            font-size: 0.95rem;
+            padding: 12px;
         }
     }
 </style>
